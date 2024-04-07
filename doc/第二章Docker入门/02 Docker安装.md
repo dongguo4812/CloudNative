@@ -440,6 +440,8 @@ rm -rf /var/lib/containerd
 
 ## 2 获得加速器地址连接
 
+点击控制台后
+
 ### 2.1点击左侧菜单栏，找到容器-容器镜像服务
 
 ![image-20240406200639566](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404062025273.png)
@@ -458,13 +460,13 @@ rm -rf /var/lib/containerd
 
 ![image-20240406200930092](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404062025504.png)
 
-### 2.4.1创建文件夹
+#### 2.4.1创建文件夹
 
 ```shell
 mkdir -p /etc/docker
 ```
 
-### 2.4.2将JSON串写入到daemon.json
+#### 2.4.2将JSON串写入到daemon.json
 
 ```shell
 tee /etc/docker/daemon.json <<-'EOF'
@@ -474,7 +476,7 @@ tee /etc/docker/daemon.json <<-'EOF'
 EOF
 ```
 
-### 2.4.3重启docker
+#### 2.4.3重启docker
 
 ```shell
 systemctl daemon-reload

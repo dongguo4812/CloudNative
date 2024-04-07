@@ -173,7 +173,7 @@ docker commit -m="add vim" -a="dongguo" 03b17579cd34 dongguo/myubuntu:1.0.0
 
 ### 6启动我们的新镜像并和原来的对比
 
-1.启动dongguo/myubuntu:1.0.1镜像
+1.启动dongguo/myubuntu:1.0.0镜像
 
 ![image-20240407114648597](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404071222717.png)
 
