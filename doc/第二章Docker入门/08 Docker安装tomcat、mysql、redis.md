@@ -14,10 +14,18 @@
 
 
 
-前提关闭防火墙：
+前提
+
+1.关闭防火墙：
 
 ```shell
 systemctl stop firewalld
+```
+
+2.启动docker
+
+```shell
+systemctl start docker
 ```
 
 # 安装tomcat
@@ -355,7 +363,7 @@ FLUSH PRIVILEGES;
 
 ![image-20240407203002537](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404072151714.png)
 
-## 
+
 
 ### 再新建库新建表再插入中文测试
 
