@@ -221,3 +221,28 @@ https://github.com/dongguo4812/mybatis-generator.git
 ![image-20240409173350715](F:\note\image\image-20240409173350715.png)
 
 ### 改POM
+
+
+
+
+
+### 写YML
+
+
+
+### 主启动
+
+```java
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import tk.mybatis.spring.annotation.MapperScan;
+
+@SpringBootApplication
+@MapperScan("com.dongguo.docker.mapper")
+public class DockerBootApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(DockerBootApplication.class, args);
+    }
+}
+```
+
