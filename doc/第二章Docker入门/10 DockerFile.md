@@ -740,7 +740,13 @@ docker build -t myubuntu:1.0 .
 docker run -it myubuntu:1.0 /bin/bash
 ```
 
-![image-20240408204154741](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404082057555.png)
+
+
+![image-20240409073903511](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404090740446.png)
+
+最初的ubuntu镜像是没有ifconfig命令的
+
+![image-20240409074022817](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404090740234.png)
 
 ## 虚悬镜像
 
