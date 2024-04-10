@@ -234,6 +234,12 @@ yum remove docker \
 
 当卸载Docker时，存储在/var/lib/docker/中的镜像（Images）、容器（Containers）、卷（Volumes）和网络（Networks）并不会自动被移除。这些资源在卸载过程中需要手动进行清理。
 
+如果怕删除的不干净，可以使用
+
+```shell
+yum remove docker*
+```
+
 ## 3 yum安装gcc相关配置
 
 3.1 确保Centos能连接上外网，可以使用ping命令来测试
@@ -302,11 +308,47 @@ yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-co
 
 如果提示Error downloading packages，可以多试几次。
 
+### 安装指定版本的Docker
+
+默认安装的是最新版的Docker，如果想安装指定版本的Docker
+
+![image-20240410222553179](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404102225832.png)
+
+```shell
+yum list docker-ce --showduplicates | sort -r
+```
+
+![image-20240410222330012](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404102223909.png)
+
+如3:26.0.0-1.el7对应26.0.0版本
+
+然后使用
+
+```shell
+yum install docker-ce-VERSION_STRING docker-ce-cli-VERSION_STRING containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+如安装23.0.0版本,经过测试使用官网给出的命令是无法安装Docker的，需要加上.x86_64
+
+```shell
+yum install docker-ce-3:23.0.0-1.el7.x86_64 docker-ce-cli-3:23.0.0-1.el7.x86_64 containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+![image-20240410224143229](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404102242266.png)
+
 ## 7 启动docker
 
 ```shell
 systemctl start docker
 ```
+
+docker开机自启
+
+```shell
+systemctl enable
+```
+
+![image-20240410224603000](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404102246485.png)
 
 ## 8 测试是否安装成功
 
@@ -468,6 +510,8 @@ mkdir -p /etc/docker
 
 #### 2.4.2将JSON串写入到daemon.json
 
+/etc/docker/daemon.json是Docker的核心配置文件。
+
 ```shell
 tee /etc/docker/daemon.json <<-'EOF'
 {
@@ -479,7 +523,9 @@ EOF
 #### 2.4.3重启docker
 
 ```shell
-systemctl daemon-reload
+#重新加载 systemd 的配置文件
+systemctl daemon-reload 
+#重启docker
 systemctl restart docker
 ```
 
