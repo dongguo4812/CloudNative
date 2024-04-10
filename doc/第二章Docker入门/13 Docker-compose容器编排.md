@@ -1243,6 +1243,8 @@ docker build -t dg-docker:1.0 .
 
 # 使用Compose编排后，一键启动一键停止
 
+**docker-compose up之后，可以使用docker-compose stop和docker-compose start来停止和启动所有容器服务**。
+
 停止容器
 
 ```shell
