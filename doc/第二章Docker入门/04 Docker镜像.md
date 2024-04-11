@@ -167,6 +167,10 @@ docker commit -m="提交的描述信息" -a="作者" 容器ID 要创建的目标
 docker commit -m="add vim" -a="dongguo" 03b17579cd34 dongguo/myubuntu:1.0.0
 ```
 
+
+
+
+
 这里开启了一个新的会话，执行命令，可以看到dongguo/myubuntu镜像已经达到191M
 
 ![image-20240407114448527](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404071222711.png)

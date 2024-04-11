@@ -110,4 +110,6 @@ Docker是内核级虚拟化，其不像传统的虚拟化技术一样需要额�
 
 docker官网：http://www.docker.com
 
-Docker Hub官网：https://hub-stage.docker.com/
+Docker Hub官网：https://hub.docker.com/
+
+https://hub-stage.docker.com/

@@ -47,7 +47,9 @@ Docker 利用容器（Container）独立运行的一个或一组应用，应用�
 Docker公司提供的官方registry被称为Docker Hub，存放各种镜像模板的地方。
 
 仓库分为公开仓库（Public）和私有仓库（Private）两种形式。
-最大的公开仓库是 Docker Hub(https://hub-stage.docker.com/），
+最大的公开仓库是 Docker Hubhttps://hub.docker.com/
+
+(https://hub-stage.docker.com/），
 存放了数量庞大的镜像供用户下载。国内的公开仓库包括阿里云 、网易云等
 
 
@@ -361,7 +363,7 @@ systemctl start docker
 docker开机自启
 
 ```shell
-systemctl enable
+systemctl enable docker
 ```
 
 ![image-20240410224603000](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404102246485.png)

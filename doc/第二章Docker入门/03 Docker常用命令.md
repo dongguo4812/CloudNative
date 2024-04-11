@@ -1,15 +1,5 @@
 参考官网：https://docs.docker.com/reference/cli/docker/
 
-![image-20240411122439341](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404111226786.png)
-
-Container 容器
-
-image 镜像
-
-network 网络
-
-volume 数据卷
-
 # 帮助启动类命令
 
 启动docker： systemctl start docker
@@ -34,6 +24,12 @@ volume 数据卷
 
 ```shell
 docker images 
+```
+
+或者
+
+```shell
+docker images ls
 ```
 
 **OPTIONS说明：**
@@ -141,7 +137,26 @@ ubuntu       latest    ba6acccedd29   2 years ago   72.8MB
 
 docker rmi hello-world提示该镜像被容器ee769566584a使用，无法被删除
 
-使用--force 或-f 表示强制删除该镜像
+1.先删除容器，再删除镜像
+
+```shell
+docker rm  ee769566584a
+docker rmi  feb5d9fea6a5
+```
+
+2.使用--force 或-f 表示强制删除该镜像
+
+```shell
+docker rmi -f  feb5d9fea6a5
+```
+
+## docker tag给镜像打标签
+
+```shell
+docker tag SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG]
+```
+
+![image-20240411144231867](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404112019344.png)
 
 ### 删除多个镜像
 
@@ -269,6 +284,41 @@ docker run -d ubuntu
 
 ![image-20240407074354944](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404071034694.png)
 
+## docker create 创建一个新的容器
+
+创建一个新的容器，但不会立即启动它。
+
+```shell
+docker create [OPTIONS] IMAGE [COMMAND] [ARG...]
+```
+
+其中：
+
+- `OPTIONS` 是可选的附加选项，用于配置容器的各种参数，比如端口映射、挂载卷等。
+- `IMAGE` 是要基于哪个镜像创建容器。
+- `COMMAND` 是在容器启动时要执行的命令。
+- `ARG...` 是命令的参数。
+
+
+
+```shell
+docker create --name myredis -p 6379:6379 redis
+```
+
+![image-20240411145138664](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404111455686.png)
+
+只是创建了myredis，没有启动
+
+![image-20240411145506226](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404111455616.png)
+
+需要start启动容器
+
+```
+docker start be9e5337d5bc
+```
+
+![image-20240411145559802](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404112019783.png)
+
 ## docker ps 列出当前所有正在运行的容器
 
 ```shell
@@ -310,6 +360,16 @@ run启动容器，ctrl+p 和ctrl+p退出，容器不停止
 CONTAINER ID：72d7f47f90e6是使用exit退出的容器，容器已停止
 
 ![image-20240407075623187](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404071034419.png)
+
+## docker pause/unpause暂停/启动的容器
+
+被暂停的容器的所有进程将被挂起，暂时停止运行
+
+![image-20240411150320096](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404112019248.png)
+
+
+
+![image-20240411150422153](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404112019414.png)
 
 ## docker restart 重启容器
 
@@ -361,7 +421,9 @@ docker ps -a -q | xargs docker rm
 
 ![image-20240407081817810](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404071033315.png)
 
-## docker inspect查看容器内部细节
+## docker inspect查看内部细节
+
+可以查看镜像、容器、网络、数据卷的内部细节
 
 通过这个命令，你可以获取对象的各种属性和其值。这些属性可能包括对象的 ID、创建时间、所在的网络、挂载的卷、容器的状态、运行时参数等等。
 
@@ -603,6 +665,8 @@ docker ps -a -q | xargs docker rm
 
 ### docker attach
 
+连接到正在运行的容器，并将当前的标准输入、标准输出和标准错误流附加到该容器的进程中。这意味着你可以像连接到终端一样与容器中的进程进行交互。
+
 ![image-20240407093524943](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404071033149.png)
 
 
@@ -647,10 +711,13 @@ OK
 
 
 
-## docker cp 从容器内拷贝文件到主机上
+## docker cp 拷贝文件
+
+即可以从容器内拷贝文件到主机。也可以从主机拷贝文件到容器。
 
 ```shell
 docker cp  容器ID:容器内路径 目的主机路径
+docker cp  目的主机路径 容器ID:容器内路径
 ```
 
 在容器内的/tmp目录创建a.txt文件，使用ctrl+p 和ctrl+p退出容器，然后将容器内的/tmp/a.txt拷贝到宿主机的/opt目录下
@@ -680,6 +747,8 @@ Successfully copied 1.54kB to /opt
 drwx--x--x. 4 root root 28 4月   6 19:54 containerd
 drwxr-xr-x. 3 root root 26 2月  18 2023 software
 ```
+
+`docker cp` 命令使得在容器和主机之间进行文件交换变得非常方便。
 
 ## 导入和导出容器
 
@@ -738,11 +807,27 @@ drwxr-xr-x. 1 root root  6 Apr  7 02:30 ../
 -rw-r--r--. 1 root root  0 Apr  7 01:50 a.txt
 ```
 
+## docker diff显示容器内文件系统的变化
+
+比较容器的当前文件系统状态与其基础镜像的状态，并显示文件和目录的变化情况。
+
+![image-20240411155601572](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404112019768.png)
+
 
 
 # 常用命令汇总
 
 ![image-20240407103209255](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404071033928.png)
+
+Container 容器
+
+image 镜像
+
+network 网络
+
+volume 数据卷
+
+
 
 attach    Attach to a running container                 # 当前 shell 下 attach 连接指定运行镜像
 build     Build an image from a Dockerfile              # 通过 Dockerfile 定制镜像
