@@ -1,5 +1,15 @@
 参考官网：https://docs.docker.com/reference/cli/docker/
 
+![image-20240411122439341](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404111226786.png)
+
+Container 容器
+
+image 镜像
+
+network 网络
+
+volume 数据卷
+
 # 帮助启动类命令
 
 启动docker： systemctl start docker
@@ -142,12 +152,12 @@ docker rmi -f 镜像名1:TAG 镜像名2:TAG
 ### 删除全部镜像
 
 ```shell
-docker rmi -f $(docker images -qa)
+docker rmi -f $(docker images -aq)
 ```
 
-docker images -qa表示获取全部镜像ID 
+docker images -aq表示获取全部镜像ID 
 
-将docker images -qa 的结果传递给 docker rmi -f 命令
+将docker images -aq的结果传递给 docker rmi -f 命令
 
 # 容器命令
 

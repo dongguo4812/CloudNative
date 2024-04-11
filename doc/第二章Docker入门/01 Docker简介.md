@@ -4,7 +4,7 @@ Docker是一种开源的容器化平台，能够帮助开发人员和系统管�
 
 总的来说，Docker为开发人员和系统管理员提供了一种更简单、更高效的方式来构建、部署和管理应用程序
 
-![image-20240410221804203](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404102218638.png)
+
 
 # **为什么会出现Dokcer**
 
