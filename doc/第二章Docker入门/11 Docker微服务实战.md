@@ -244,6 +244,8 @@ CMD ["/bin/hello"]
 
 项目地址：https://github.com/dongguo4812/CloudNative/tree/master/docker-boot
 
+https://gitee.com/dongguo4812_admin/CloudNative
+
 ## Dockerfile
 
 /opt/software/mydocker2目录下
@@ -254,19 +256,20 @@ FROM alpine/git AS gitclone
 #guthub一直下载不下载，这里改成码云
 ARG url=https://gitee.com/dongguo4812_admin/CloudNative.git
 ARG appName=docker-boot
-RUN git clone $url
-RUN pwd && ls -l
+RUN git clone $url /git/CloudNative && cd /git/CloudNative/docker-boot
 # 第二阶段 构建源码
+RUN pwd && ls -l 
 FROM maven:3.6.1-jdk-8-alpine AS buildapp
 COPY --from=gitclone /git/CloudNative/docker-boot/* /app/
-WORKDIR /app
+WORKDIR /app/
 RUN pwd && ls -l
 
-RUN cd $appName
-RUN pwd && ls -l
-COPY pom.xml .
-COPY src .
 RUN mvn clean package
+RUN pwd && ls -l
+RUN cp /app/target/*.jar /dg-docker.jar
+
+
+
 # 第三阶段 基础镜像使用java
 FROM java:8
 # 作者
