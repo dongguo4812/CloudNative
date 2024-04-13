@@ -303,7 +303,7 @@ docker run -d -p 8081:8081 dg-docker:2.0
 
 ## 访问测试
 
-http://192.168.122.141:8081/order/docker
+http://192.168.122.140:8081/order/docker
 
 
 
