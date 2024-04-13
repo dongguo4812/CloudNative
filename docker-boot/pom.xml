@@ -120,5 +120,10 @@
       <name>aliyun</name>
       <url>https://maven.aliyun.com/repository/public</url>
     </repository>
+    <repository>
+      <id>google-maven</id>
+      <name>Google Maven Repository</name>
+      <url>https://maven-central.storage.googleapis.com</url>
+    </repository>
   </repositories>
 </project>
