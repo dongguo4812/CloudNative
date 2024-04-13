@@ -807,6 +807,32 @@ drwxr-xr-x. 1 root root  6 Apr  7 02:30 ../
 -rw-r--r--. 1 root root  0 Apr  7 01:50 a.txt
 ```
 
+## docker save将指定的一个或多个镜像保存为一个 tar 归档文件
+
+```
+docker save -o image.tar nginx redis
+```
+
+将nginx、redis镜像保存为image.tar归档文件
+
+![image-20240412091502157](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404120934760.png)
+
+## docker load从一个 tar 归档文件中加载一个或多个镜像
+
+```
+docker load -i myimage.tar
+```
+
+
+
+删除nginx redis镜像
+
+![image-20240412093253123](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404120933200.png)
+
+加载
+
+![image-20240412093341236](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404120933624.png)
+
 ## docker diff显示容器内文件系统的变化
 
 比较容器的当前文件系统状态与其基础镜像的状态，并显示文件和目录的变化情况。

@@ -6,6 +6,8 @@
 
 # DockerFile简介
 
+https://docs.docker.com/reference/dockerfile/
+
 DockerFile是用于构建Docker镜像的文本文件，其中包含了一系列指令和参数。DockerFile中的指令描述了如何构建镜像，可以指定从哪个镜像启动、安装哪些软件包、配置环境变量、拷贝文件等等。
 
 通过编写DockerFile，可以将应用程序和其依赖打包成一个可移植的镜像，方便在不同的环境中运行。同时，使用DockerFile进行构建还可以保证镜像的一致性和可重复性。
@@ -276,6 +278,16 @@ FROM是用于指定该镜像文件所基于的镜像。
 
 它指定一个已经存在的Docker镜像作为基础镜像构建当前镜像。FROM语句应该在Dockerfile的第一行，必须有且只有一个。
 
+如何确定我需要什么要的基础镜像？ 
+
+Java应用当然是java基础镜像（SpringBoot应用）或者Tomcat基础镜像（War应用） 
+
+JS模块化应用一般用nodejs基础镜像 
+
+其他各种语言用自己的服务器或者基础环境镜像，如python、golang、java、php等
+
+
+
 这个语句告诉Docker使用哪个镜像作为基础镜像进行构建新的镜像。
 
 ![image-20240408165839915](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404082058495.png)
@@ -290,9 +302,15 @@ FROM是用于指定该镜像文件所基于的镜像。
 
 ![image-20240408170053268](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404082058345.png)
 
+LABEL:标注镜像的一些说明信息。
+
+
+
 ## RUN
 
-RUN表示在容器中执行指定的命令
+RUN表示在容器中执行指定的命
+
+RUN指令在当前镜像层顶部的新层执行任何命令，并提交结果，生成新的镜像层。
 
 分为两种格式:shell格式、exec格式
 
@@ -308,6 +326,18 @@ https://docs.docker.com/reference/dockerfile/#shell-and-exec-form
 
 ![image-20240408170746404](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404082058790.png)
 
+在shell形式中，您可以使用\（反斜杠）将一条 RUN指令继续到下一行。
+
+```dockerfile
+RUN /bin/bash -c 'source $HOME/.bashrc; \
+echo $HOME'
+#上面等于下面这种写法
+RUN /bin/bash -c 'source $HOME/.bashrc; echo $HOME'
+RUN ["/bin/bash", "-c", "echo hello"]
+```
+
+
+
 ### exec格式
 
 ![image-20240408170636731](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404082058935.png)
@@ -321,6 +351,8 @@ RUN命令可以出现多次，每次执行的命令会被按顺序添加到镜�
 如在Windows基础镜像中执行 `tasklist.exe` 程序
 
 ![image-20240408171154257](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404082058230.png)
+
+
 
 ## EXPOSE
 
@@ -406,6 +438,20 @@ ENV CATALINA_HOME /usr/local/tomcat
 WORKDIR $CATALINA_HOME
 ```
 
+ENV的持久化：
+
+在Docker中，环境变量是持久的。这意味着在容器启动时设置的环境变量将一直存在，直到容器被停止或删除。无论是在构建镜像阶段设置的环境变量，还是在容器启动时通过docker run命令设置的环境变量，都会一直生效。
+
+## ARG
+
+ARG指令定义了一个变量，用户可以在构建时使用--build-arg = 传递，docker build命令会将其传递 给构建器。
+
+ --build-arg 指定参数会覆盖Dockerfile 中指定的同名参数 
+
+如果用户指定了 未在Dockerfile中定义的构建参数 ，则构建会输出 警告 。 
+
+ARG只在构建期有效，运行期无效
+
 ## ADD
 
 将宿主机目录下的文件拷贝进镜像且会自动处理URL和解压tar压缩包（相当于COPY+解压）
@@ -425,6 +471,8 @@ dest则表示容器中的目标路径，可以是绝对路径或相对路径。
 ```dockerfile
 ADD test.txt /absoluteDir/
 ```
+
+需要注意的是，如果压缩包是以 `.zip` 格式压缩的，Docker 会自动解压缩该压缩包。但是对于其他格式的压缩包，Docker 会假设它们是以 `.tar` 格式压缩的，并将其解压缩到目标路径。
 
 ## COPY
 
@@ -545,7 +593,7 @@ ENTRYPOINT ["echo", "hello world"]
 
 
 
-
+ENTRYPOINT可以和CMD都可以作为启动容器的入口
 
 ### ENTRYPOINT可以和CMD一起用
 
@@ -593,6 +641,8 @@ docker run  nginx:test -c /etc/nginx/new.conf
 ```
 nginx -c /etc/nginx/new.conf
 ```
+
+
 
 # DockerFile指令使用案例
 
@@ -675,7 +725,7 @@ EXPOSE 80
 docker build -t 新镜像名字:TAG .
 ```
 
-当你运行 `docker build` 命令时，Docker 需要知道从哪里获取构建镜像所需的指令和配置。这些指令和配置通常位于一个名为 `Dockerfile` 的文件中。`.` 告诉Docker在当前目录下查找这个文件。
+当你运行 `docker build` 命令时，Docker 需要知道从哪里获取构建镜像所需的指令和配置。这些指令和配置通常位于一个名为 `Dockerfile` 的文件中。`.` 告诉Docker以当前目录为基准构建镜像，上下文的文件路径。
 
 执行
 
@@ -684,6 +734,22 @@ docker build -t centos-java8:1.0 .
 ```
 
 ![image-20240408201653212](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404082057640.png)
+
+默认执行执行Dockerfile中的指令，如果创建的dockerfile文件名为Dockerfile1，可使用-f 指定文件名
+
+```shell
+docker build -t centos-java8:1.0  -f Dockerfile1 .
+```
+
+
+
+`.` 是上下文的文件目录，假如执行的目录不是在software目录下，或者dockerfile不是和上下文文件在同一目录，就需要指定jdk、tomcat所在的目录
+
+```shell
+docker build -t centos-java8:1.0  -f /opt/software/Dockerfile1 /opt/software
+```
+
+
 
 ### 自定义镜像 centos-java8与centos镜像对比
 

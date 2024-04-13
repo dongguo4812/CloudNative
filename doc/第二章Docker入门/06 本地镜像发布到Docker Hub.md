@@ -10,7 +10,7 @@ https://hub.docker.com/ 我使用的是github账号进行注册
 
 # 3.登录远程docker仓库
 
-username就是Docker Hub中的名称
+username就是Docker Hub中的名称，我使用的是github账号，邮箱和密码是github账号密码
 
 ![image-20240411182945811](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404112019506.png)
 
@@ -24,7 +24,22 @@ username就是Docker Hub中的名称
 
 ![image-20240411190136716](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404112019330.png)
 
-Docker Hub一个完整镜像的全路径是docker.io/library/imageName:tag
+Docker Hub一个完整镜像的全路径是docker.io/library/imageName:tag，如拉取ubuntu镜像，完整镜像名docker.io/library/nginx:latest
+
+```shell
+[root@dongguo ~]# docker pull nginx
+Using default tag: latest
+latest: Pulling from library/nginx
+a2abf6c4d29d: Already exists 
+a9edb18cadd1: Pull complete 
+589b7251471a: Pull complete 
+186b1aaa4aa6: Pull complete 
+b4df32aa5a72: Pull complete 
+a0bcbecc962e: Pull complete 
+Digest: sha256:0d17b565c37bcbd895e9d92315a05c1c3c9a29f762b011a10c54a66cd53c9b31
+Status: Downloaded newer image for nginx:latest
+docker.io/library/nginx:latest
+```
 
 将ubuntu修改为符合Docker Hub规范的镜像名：dongguo274812/myubuntu:1.0 
 
@@ -40,7 +55,7 @@ Docker Hub一个完整镜像的全路径是docker.io/library/imageName:tag
 
 ![image-20240411202000388](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404112020862.png)
 
-在网上查询都是说登录以及镜像命名的问题，但是这些我都确认是正确的。没有办法，只能在docker hub中找下答案。
+在网上查询都是说登录以及镜像命名的问题，但是这些我都确认是正确的。没有办法，只能在docker hub中找下答案，可能是没有推送权限的原因。
 
 1）点击我的账号
 
@@ -48,7 +63,7 @@ Docker Hub一个完整镜像的全路径是docker.io/library/imageName:tag
 
 
 
-2）发现Security安全中又设置token的
+2）发现Security安全中有设置token的
 
 ![image-20240411215743477](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404112209211.png)
 
@@ -62,7 +77,7 @@ Docker Hub一个完整镜像的全路径是docker.io/library/imageName:tag
 
 5）使用token方式登录
 
-复制token，输入到password位置
+复制token，输入到password位置，-u 对应用户名
 
 ![image-20240411220206063](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404112208923.png)
 
