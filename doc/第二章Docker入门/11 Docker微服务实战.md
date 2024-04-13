@@ -199,3 +199,116 @@ docker run -d -p 8081:8081 dg-docker:1.0
 http://192.168.122.140:8081/order/docker
 
 ![image-20240409085926517](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404090859093.png)
+
+# 多阶段构建
+
+https://docs.docker.com/build/building/multi-stage/
+
+一个镜像分为多个大的阶段进行构建，最终的构建结果是最后一个阶段的结果
+
+允许一个 Dockerfile 中定义多个构建阶段，以便优化镜像构建的过程，减少镜像的体积。
+
+1. **减小镜像体积**：通过将构建过程分成多个阶段，可以在一个阶段中生成所需的文件，然后在下一个阶段中拷贝这些文件，从而避免在最终镜像中包含构建工具和依赖，减小镜像的体积。
+2. **优化构建速度**：通过只构建所需的部分，可以减少构建所需的时间，提高构建效率。
+
+如官网给出的例子
+
+```dockerfile
+# syntax=docker/dockerfile:1
+FROM golang:1.21
+WORKDIR /src
+COPY <<EOF ./main.go
+package main
+
+import "fmt"
+
+func main() {
+  fmt.Println("hello, world")
+}
+EOF
+RUN go build -o /bin/hello ./main.go
+
+FROM scratch
+COPY --from=0 /bin/hello /bin/hello
+CMD ["/bin/hello"]
+```
+
+在这个示例中，有两个阶段：
+
+1. 第一个阶段使用了 `golang:1.21` 镜像作为基础镜像，编译 main.go 文件为可执行文件 hello，并放置在 /bin 目录下。。
+2. 第二个阶段指定了一个空的基础镜像，从第一个阶段的构建结果中复制编译好的 hello 可执行文件到当前阶段。并设置容器启动时执行的默认命令为运行 hello 可执行文件。
+
+
+
+之前的项目还需要打包上传后，再构建运行，我们可以通过多阶段构建，dockerfile实现下载项目、打包构建操作。
+
+项目地址：https://github.com/dongguo4812/CloudNative/tree/master/docker-boot
+
+## Dockerfile
+
+/opt/software/mydocker2目录下
+
+```dockerfile
+# 第一阶段下载项目
+FROM alpine/git AS gitclone
+#guthub一直下载不下载，这里改成码云
+ARG url=https://gitee.com/dongguo4812_admin/CloudNative.git
+ARG appName=docker-boot
+RUN git clone $url
+RUN pwd && ls -l
+# 第二阶段 构建源码
+FROM maven:3.6.1-jdk-8-alpine AS buildapp
+COPY --from=gitclone /git/CloudNative/docker-boot/* /app/
+WORKDIR /app
+RUN pwd && ls -l
+
+RUN cd $appName
+RUN pwd && ls -l
+COPY pom.xml .
+COPY src .
+RUN mvn clean package
+# 第三阶段 基础镜像使用java
+FROM java:8
+# 作者
+LABEL author=Dongguo
+# 把上一个阶段 dg-docker.jar 复制过来
+COPY --from=buildapp /dg-docker.jar /dg-docker.jar
+# 运行jar包
+RUN bash -c 'touch /dg-docker.jar'
+ENTRYPOINT ["java","-jar","/dg-docker.jar"]
+# 暴露8081端口作为微服务
+EXPOSE 8081
+```
+
+![image-20240413150915768](F:\note\image\image-20240413150915768.png)
+
+## 构建镜像
+
+```shell
+ docker build --progress=plain --no-cache -t dg-docker:2.0 .
+```
+
+可以一个阶段一个阶段测试，慢慢的添加代码虽然慢一点，但是能确定错误的地方
+
+## 运行容器
+
+```
+docker run -d -p 8081:8081 dg-docker:2.0
+```
+
+
+
+## 访问测试
+
+http://192.168.122.141:8081/order/docker
+
+
+
+
+
+
+
+
+
+
+

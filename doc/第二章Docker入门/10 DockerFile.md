@@ -358,7 +358,9 @@ RUN命令可以出现多次，每次执行的命令会被按顺序添加到镜�
 
 当前容器对外暴露出的端口。
 
-这并不会实际打开或映射端口，只是让使用Dockerfile的人知道哪些端口是容器应用程序会使用的，以便他们可以在运行容器时进行端口映射。
+这并不会实际打开或映射端口，只是让使用Dockerfile的人知道哪些端口是容器应用程序会使用的，以便他们可以在运行容器时进行端口映射（只是一个声明）。
+
+EXPOSE指令实际上不会发布端口。 要在运行容器时实际发布端口，请在docker run上使用-p标志发布 并映射一个或多个端口，或使用-P标志发布所有公开的端口并将其映射到高阶端口。
 
 ![image-20240408171559693](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404082058359.png)
 
@@ -375,6 +377,8 @@ WORKDIR用于设置工作目录。
 ![image-20240408171852948](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404082058614.png)
 
 该指令会将工作目录设置为 /usr/local/tomcat，即在容器内运行以下命令时所处的目录为 /usr/local/tomcat。
+
+构建容器后，进入容器默认进入到WORKDIR目录  /usr/local/tomcat下
 
 ## USER
 
@@ -504,9 +508,19 @@ VOLUME ["/data"]
 VOLUME  /data
 ```
 
+指定了Volume，Docker会自动进行匿名卷挂载，如
+
+![image-20240412194903906](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404131126165.png)
+
+dockerfile中不要在volume命令后 再操作挂载的文件，这样是不生效的
+
+![image-20240413123406838](F:\note\image\image-20240413123406838.png)
+
 ## CMD
 
 指定容器启动后要运行的命令
+
+
 
 注意：每个Dockerfile只能有一个CMD指令，如果有多个则只有最后一个指令会生效。如果在docker run时指定了要运行的命令，则CMD指令会被覆盖。
 
@@ -559,7 +573,7 @@ CMD ["/bin/bash", "run"]
 
 ## ENTRYPOINT
 
-用于指定容器启动时执行的默认命令或程序。
+用于指定容器启动时执行的默认命令或程序。每个 Dockerfile 只能有一个 `ENTRYPOINT` 指令生效。
 
 类似于 CMD 指令，但是ENTRYPOINT不会被docker run后面的命令覆盖，
 
