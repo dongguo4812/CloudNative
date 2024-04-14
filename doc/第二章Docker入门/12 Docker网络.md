@@ -1,6 +1,10 @@
 # Docker网络简介
 
+https://docs.docker.com/network/
+
 Docker网络是一种虚拟化的网络，在Docker环境下实现容器间通讯，以及容器和宿主机之间的通讯。Docker引擎为容器提供了多种网络模式，包括Bridge模式、Host模式、None模式、Container模式等。
+
+![image-20240414124419773](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404141244145.png)
 
 ## 未使用Docker时默认网络情况
 
@@ -62,7 +66,7 @@ docker network rm XXX网络名字
 
 # 容器实例内默认网络IP生产规则（动态分配IP）
 
-当使用Docker的默认bridge网络或者自定义的bridge网络时，Docker会动态地为每个新创建的容器分配一个IP地址。
+当使用Docker的默认bridge网络或者自定义的bridge网络时，Docker会动态地为每个新创建的容器分配一个IP地址。这个ip挂载到docker0这个桥接网关上。
 
 如果容器被停止并重新启动，当之前的IP地址已经被分配给其他容器时，它会从Docker的网络池中获取一个新的IP地址。
 
@@ -790,6 +794,33 @@ cfde36a5dc5a   bridge    bridge    local
 
 从上图看到每个eth0都对应docker bridge中的veth
 
+
+
+
+
+Containers表示使用bridge模式启动的容器
+
+```shell
+        "Containers": {
+            "3af6157e9e79735795b9d7d0f175f3072b7858f6474411cc9a1004750286e38f": {
+                "Name": "u1",
+                "EndpointID": "68e88dfe8cab5bb09afcc5ee41044635fd8e86cbce1d3ebb1aa72ccce7e2337e",
+                "MacAddress": "02:42:ac:11:00:02",
+                "IPv4Address": "172.17.0.2/16",
+                "IPv6Address": ""
+            },
+            "d216515869b027c749f5a52ad823b79549a041de96d241489816da92ecb39e63": {
+                "Name": "u3",
+                "EndpointID": "4243d30d8beef291e13fcf9c348ca0eb95d94f57f440a69125c07ccfbeba2687",
+                "MacAddress": "02:42:ac:11:00:03",
+                "IPv4Address": "172.17.0.3/16",
+                "IPv6Address": ""
+            }
+        }
+```
+
+
+
 ### 启动两个tomcat容器，查看对应的ip
 
 ```shell
@@ -1159,9 +1190,49 @@ alpine2
 
 但是在使用bridge模式时，docker容器内部的ip是有可能会发生改变的，依赖容器内部IP地址进行通信通常不是一个好的做法。
 
-我们可以通过服务名直接网络通信而不受到影响。但是默认的bridge模式无法实现
+我们可以通过服务名（域名）直接网络通信而不受到影响。但是默认的bridge模式无法实现
 
 ![image-20240409145253840](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404091512042.png)
+
+
+
+### 使用--link实现容器名互相通信
+
+启动tomcat81
+
+```
+docker run -d -p 8081:8080   --name tomcat81 billygoo/tomcat8-jdk8
+```
+
+启动tomcat82 通过--link 指定与tomcat81通信
+
+```
+docker run -d -p 8082:8080   --name tomcat82 --link tomcat81 billygoo/tomcat8-jdk8
+```
+
+进入tomcat82尝试pingtomcat81
+
+![image-20240414160821553](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404142051387.png)
+
+而且这只是单向通信，tomcat81并不能ping tomcat82
+
+link 指令在 Docker 中已经不推荐使用，因为这种方式看似是通过容器名链接，但是是通过容器ID。重新启动一个容器这样就失效了。
+
+为什么tomcat82能ping通tomcat81，因为tomcat82容器里hosts配置了映射
+
+![image-20240414161012304](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404142051799.png)
+
+杀掉tomcat81，再次启动一个容器叫做tomcat81
+
+![image-20240414161151689](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404142051812.png)
+
+tomcat82就无法找到之前的tomcat81容器报错了。
+
+![image-20240414161324558](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404142051010.png)
+
+tomcat81容器ip变化也无法访问
+
+
 
 ### 使用自定义网络解决该痛点
 

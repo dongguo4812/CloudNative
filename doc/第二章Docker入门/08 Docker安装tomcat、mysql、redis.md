@@ -524,3 +524,134 @@ OK
 ## 使用图形化工具连接
 
 ![image-20240407214820631](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404072151757.png)
+
+# 安装Nginx
+
+## 从docker hub上拉取nginx镜像
+
+```shell
+docker pull nginx
+```
+
+![image-20240414180019206](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404142052611.png)
+
+## 第一次运行 nginx 镜像
+
+第一次运行镜像，用于拷贝配置文件和 html 目录到宿主机。
+
+```shell
+docker run -p 80:80 -d --name nginx nginx
+```
+
+![image-20240414181027167](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404142052230.png)
+
+拷贝 Nginx 配置文件
+
+```shell
+# nginx容器名、/etc/nginx/nginx.conf 配置文件容器内的地址
+[root@dongguo ~]# docker cp nginx:/etc/nginx /app/nginx
+Successfully copied 16.9kB to /app/nginx
+[root@dongguo ~]# docker cp nginx:/usr/share/nginx/html /app/nginx/html
+Successfully copied 4.1kB to /app/nginx/html
+```
+
+复制的目录是nginx修改为conf
+
+![image-20240414184229369](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404142052320.png)
+
+
+
+删除容器nginx
+
+```shell
+docker rm -f nginx
+```
+
+## 正式运行镜像
+
+```shell
+# 注意 外部的/nginx/conf下面的内容必须存在，否则挂载会覆盖
+docker run -p 80:80 --name nginx \
+-v /app/nginx/html:/usr/share/nginx/html:ro \
+-v /app/nginx/conf:/etc/nginx \
+-d nginx
+```
+
+![image-20240414184259635](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404142052353.png)
+
+## 测试
+
+![image-20240414184309160](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404142052444.png)
+
+# 安装ElasticSearch
+
+## 拉取镜像
+
+ 以安装Elasticsearch 8.6.0版本为例
+
+## 创建挂载点目录
+
+```shell
+mkdir -p /app/es/data /app/es/plugins
+chmod 777  /app/es/data
+chmod 777  /app/es/plugins
+```
+
+## 部署单机es，创建es容器
+
+```shell
+#准备文件和文件夹，并chmod -R 777 xxx
+docker run --name=elasticsearch -p 9200:9200 -p 9300:9300 \
+-e "discovery.type=single-node" \
+-e ES_JAVA_OPTS="-Xms300m -Xmx300m" \
+-v /app/es/data:/usr/share/elasticsearch/data \
+-v /app/es/plugins:/usr/shrae/elasticsearch/plugins \
+-v es8config:/usr/share/elasticsearch/config \
+-d elasticsearch:8.6.0
+```
+
+-v es8config:/usr/share/elasticsearch/config  具名卷将/usr/share/elasticsearch/config的数据映射到es8config卷
+
+## 编写elasticsearch.yml
+
+### 注意！ es8.0以上默认开启了 ssl 认证
+
+直接访问 : http://192.168.122.140:9200是无法访问的，需要访问 https,或者关闭 SSL认证
+
+```
+cd  /var/lib/docker/volumes
+```
+
+打开 elasticsearch.yml 文件 找到 xpack.security.enabled: true 改为 xpack.security.enabled: false,这样就可以直接 使用http访问，并且不需要账号密码鉴权,这个设置看个人情况，如果是生产环境建议开始开启 https和账号密码鉴权
+![image-20240414204057263](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404142052451.png)
+
+
+
+```shell
+echo 'xpack.security.enabled: false' >> es8config/_data/elasticsearch.yml
+echo 'xpack.security.transport.ssl.enabled: false' >> es8config/_data/elasticsearch.yml
+```
+
+
+
+
+
+进入容器确认是否同步
+
+![image-20240414205125202](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404142052634.png)
+
+
+
+### 重启es容器
+
+```
+docker restart elasticsearch
+```
+
+## 测试Elasticsearch是否安装成功
+
+```
+http://192.168.122.140:9200
+```
+
+![image-20240414205007421](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404142051024.png)

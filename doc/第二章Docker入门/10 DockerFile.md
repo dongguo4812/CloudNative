@@ -514,7 +514,7 @@ VOLUME  /data
 
 dockerfile中不要在volume命令后 再操作挂载的文件，这样是不生效的
 
-![image-20240413123406838](F:\note\image\image-20240413123406838.png)
+![image-20240413123406838](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404142052916.png)
 
 ## CMD
 

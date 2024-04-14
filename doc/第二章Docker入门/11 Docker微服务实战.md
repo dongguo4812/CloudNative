@@ -200,7 +200,7 @@ http://192.168.122.140:8081/order/docker
 
 ![image-20240409085926517](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404090859093.png)
 
-# 多阶段构建
+# 多阶段构建multi-stage builds
 
 https://docs.docker.com/build/building/multi-stage/
 
@@ -237,87 +237,3 @@ CMD ["/bin/hello"]
 
 1. 第一个阶段使用了 `golang:1.21` 镜像作为基础镜像，编译 main.go 文件为可执行文件 hello，并放置在 /bin 目录下。。
 2. 第二个阶段指定了一个空的基础镜像，从第一个阶段的构建结果中复制编译好的 hello 可执行文件到当前阶段。并设置容器启动时执行的默认命令为运行 hello 可执行文件。
-
-
-
-之前的项目还需要打包上传后，再构建运行，我们可以通过多阶段构建，dockerfile实现下载项目、打包构建操作。
-
-项目地址：https://github.com/dongguo4812/CloudNative/tree/master/docker-boot
-
-https://gitee.com/dongguo4812_admin/CloudNative
-
-## Dockerfile
-
-/opt/software/mydocker2目录下
-
-```dockerfile
-# 第一阶段下载项目
-FROM alpine/git AS gitclone
-#guthub一直下载不下载，这里改成码云
-ARG url=https://gitee.com/dongguo4812_admin/CloudNative.git
-ARG appName=docker-boot
-RUN git clone $url /git/CloudNative && cd /git/CloudNative/docker-boot
-# 第二阶段 构建源码
-RUN pwd && ls -l 
-FROM maven:3.6.1-jdk-8-alpine AS buildapp
-COPY --from=gitclone /git/CloudNative/docker-boot/* /app/
-WORKDIR /app/
-RUN pwd && ls -l
-
-RUN mvn clean package
-RUN pwd && ls -l
-RUN cp /app/target/*.jar /dg-docker.jar
-
-
-
-# 第三阶段 基础镜像使用java
-FROM java:8
-# 作者
-LABEL author=Dongguo
-# 把上一个阶段 dg-docker.jar 复制过来
-COPY --from=buildapp /dg-docker.jar /dg-docker.jar
-# 运行jar包
-RUN bash -c 'touch /dg-docker.jar'
-ENTRYPOINT ["java","-jar","/dg-docker.jar"]
-# 暴露8081端口作为微服务
-EXPOSE 8081
-```
-
-![image-20240413150915768](F:\note\image\image-20240413150915768.png)
-
-## 构建镜像
-
-```shell
- docker build --progress=plain --no-cache -t dg-docker:2.0 .
-```
-
-可以一个阶段一个阶段测试，慢慢的添加代码虽然慢一点，但是能确定错误的地方
-
-![image-20240413213256068](F:\note\image\image-20240413213256068.png)
-
-![image-20240413203410773](F:\note\image\image-20240413203410773.png)
-
-## 运行容器
-
-```
-docker run -d -p 8081:8081 dg-docker:2.0
-```
-
-
-
-![image-20240413203431676](F:\note\image\image-20240413203431676.png)
-
-## 访问测试
-
-http://192.168.122.140:8081/order/docker
-
-
-
-
-
-
-
-
-
-
-
