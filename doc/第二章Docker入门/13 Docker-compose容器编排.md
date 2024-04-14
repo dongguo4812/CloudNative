@@ -1086,6 +1086,8 @@ docker run -d -p 8081:8081 dg-docker:1.0
 
 ## 编写docker-compose.yml文件
 
+名称有要求Supported filenames: docker-compose.yml, docker-compose.yaml, compose.yml, compose.yaml
+
 /opt/software/mycompose目录下
 
 ```shell
