@@ -170,3 +170,43 @@ sed -i 's/www.google.com/www.baidu.com/g' default.json
 安装完成后
 
 ![image-20240415221409065](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404152219218.png)
+
+流水线
+
+![image-20240416070252052](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404162126643.png)
+
+# 推荐安装的插件
+
+## Docker Pipeline && Docker
+
+Docker Pipeline：允许在 Jenkins Pipeline 中使用 Docker 命令，比如构建和推送 Docker 镜像，以及运行 Docker 容器。
+
+Docker：在 Jenkins 构建环境中启动和管理 Docker 容器。
+
+## Git Parameter
+
+解析git参数，允许选择分支进行构建
+
+## Active Choices
+
+允许在Jenkins作业中动态地提供参数选项
+
+## Generic WebHook Trigger
+
+通用的webhook触发器，允许通过HTTP POST请求触发Jenkins作业，构建更强大的webhook功能。
+
+## Role-based Authorization Strategy
+
+在Jenkins中定义基于角色（RBAC）的权限。通过此插件，您可以创建自定义角色，并将这些角色分配给用户或组。然后，您可以为每个角色定义不同的权限，以控制用户对Jenkins中不同资源的访问权限。
+
+## List Git Branches Parameter
+
+在构建过程中提供一个下拉菜单，用于选择Git存储库中的分支作为参数
+
+## Build With Parameters
+
+允许在运行构建时提供参数。这些参数可以是字符串、布尔值或下拉菜单等形式，使您可以根据需要自定义构建过程。
+
+## Blue Ocean
+
+提供现代化、直观的用户界面，以改善持续集成和交付（CI/CD）流程的可视化和交互体验。
