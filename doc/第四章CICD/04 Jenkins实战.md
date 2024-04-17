@@ -1002,3 +1002,303 @@ steps{
 访问http://192.168.122.141:8081/hello
 
 ![image-20240416212501598](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404162129142.png)
+
+# POST后置操作
+
+在 Jenkins Pipeline 中，`post` 块用于定义在整个 Pipeline 执行结束后执行的步骤，无论 Pipeline 执行成功或失败都会执行这些步骤。
+
+你可以使用 `success` 块来定义 Pipeline 成功时执行的步骤，使用 `failure` 块来定义 Pipeline 失败时执行的步骤
+
+![image-20240417061520607](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170928646.png)
+
+## 某个阶段使用POST
+
+修改Jenkinsfile在部署阶段使用post实现成功或失败执行输出
+
+```shell
+        // 阶段4部署
+        stage('部署') {
+            steps {
+                echo "部署。。。"
+                sh 'docker rm -f devops-demo'
+                sh 'docker run -d -p 8081:8081 --name=devops-demo devops-demo'
+            }
+            post {
+                failure {
+                    // One or more steps need to be included within each condition's block.
+                    echo "执行失败。。。"
+                }
+                success {
+                    // One or more steps need to be included within each condition's block.
+                    echo "执行成功。。。"
+                }
+            }
+        }
+```
+
+正常情况输出：执行成功
+
+![image-20240417063235868](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170928673.png)
+
+## 全阶段统一POST
+
+当然POST可以统一全阶段有效
+
+修改Jenkinsfile
+
+```shell
+pipeline {
+    // 全部的CICD流程都定义在这里
+    agent any // 任何代理都可以被执行
+
+    environment {
+        username = "dongguo"
+        WORK_SPACE = "$WORKSPACE" // 全局环境中的WORKSPACE是/var/jenkins_home/workspace/devops-demo
+    }
+
+    // 定义流水线的加工流程
+    stages {
+        // 阶段0检查
+        stage('环境检查') {
+            // 要做的事情
+            steps {
+                echo "正在检查基本信息"
+                sh 'java -version'
+                sh 'git --version'
+                sh 'docker version'
+            }
+        }
+        // 阶段1编译
+        stage('编译') {
+            // 要做的事情
+            agent {
+                docker {
+                    image 'maven:3-alpine'
+                    args '-v /var/jenkins_home/appconfig/maven/repository:/repository' // 将Docker容器内的路径映射到Jenkins主机上的路径
+                }
+            }
+            steps {
+                echo "编译。。。"
+                sh 'printenv'
+                sh 'mvn --version'
+                sh 'cd $WORK_SPACE && mvn clean package -s "/var/jenkins_home/appconfig/maven/settings.xml" -Dmaven.test.skip=true' // 打包
+            }
+        }
+        // 阶段2测试
+        stage('测试') {
+            steps {
+                echo "测试。。。"
+                echo "$username"
+                echo "${username}"
+                sh 'pwd && ls -alh' // 打印当前工作目录（使用 pwd 命令），然后列出当前目录下所有文件和目录的详细信息（使用 ls -alh 命令）。
+                sh 'printenv' // 打印当前 Shell 环境中的所有环境变量及其取值。
+            }
+        }
+
+        // 阶段3生成镜像
+        stage('生成镜像') {
+            steps {
+                echo "生成镜像。。。"
+                sh 'pwd && ls -alh'
+                sh 'docker version'
+                sh 'docker build -t devops-demo .'
+            }
+        }
+        // 阶段4部署
+        stage('部署') {
+            steps {
+                echo "部署。。。"
+                sh 'docker rm -f devops-demo'
+                sh 'docker run -d -p 8081:8081 --name=devops-demo devops-demo'
+            }
+//             post {
+//                 failure {
+//                     // One or more steps need to be included within each condition's block.
+//                     echo "执行失败。。。"
+//                 }
+//                 success {
+//                     // One or more steps need to be included within each condition's block.
+//                     echo "执行成功。。。"
+//                 }
+//             }
+        }
+
+        // 阶段5发送报告
+        stage('发送报告') {
+            steps {
+                echo "发送报告。。。"
+            }
+        }
+    }
+
+    post {
+        failure {
+            // One or more steps need to be included within each condition's block.
+            echo "执行失败。。。"
+        }
+        success {
+            // One or more steps need to be included within each condition's block.
+            echo "执行成功。。。"
+        }
+    }
+}
+```
+
+会在所有阶段执行完成后，根据执行情况在最后阶段输出
+
+![image-20240417063904327](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170928008.png)
+
+失败情况
+
+![image-20240417064521173](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170928458.png)
+
+# 构建完成发送邮件通知
+
+emailext body: '构建成功', subject: 'Jenkins构建', to: '291320608@qq.com'
+
+## 配置Jenkins管理员邮件地址
+
+插件
+
+![img](https://img-blog.csdnimg.cn/f598269ae84c4077acd37c4a30f6ee79.png)
+
+系统配置
+
+![image-20240417064907812](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170928043.png)
+
+配置邮件地址
+
+![image-20240417065010055](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170928120.png)
+
+## 配置邮件发送的认证信息
+
+1开启邮箱的smtp服务，获取到授权码
+
+![image-20240417070115716](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170928862.png)
+
+SMTP对应地址smtp.163.com 端口465
+
+![image-20240417065919872](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170928499.png)
+
+找到Jenkins 系统管理中的邮件通知，填写信息，点击测试
+
+![image-20240417071027522](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170928614.png)
+
+qq邮箱已经收到邮件
+
+![image-20240417071313248](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170929531.png)
+
+上面只是测试，真正有效的是Extended E-mail Notification
+
+Credentials添加一个凭据 账号是邮箱的账号，密码是邮箱的授权码
+
+![image-20240417075344710](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170929425.png)
+
+## 随便搜一个Jenkins邮件发送模板
+
+![image-20240417072229625](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170929836.png)
+
+复制到片段生成器，输入收件人邮箱生成流水线脚本
+
+![image-20240417072806513](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170929004.png)
+
+Jenkinsfile
+
+```shell
+        // 阶段5发送报告
+        stage('发送报告') {
+            steps {
+                echo "发送报告。。。"
+                emailext body: '''<!DOCTYPE html>
+                <html>
+                <head>
+                <meta charset="UTF-8">
+                <title>${ENV, var="JOB_NAME"}-第${BUILD_NUMBER}次构建日志</title>
+                </head>
+                
+                <body leftmargin="8" marginwidth="0" topmargin="8" marginheight="4"
+                    offset="0">
+                    <table width="95%" cellpadding="0" cellspacing="0"
+                        style="font-size: 11pt; font-family: Tahoma, Arial, Helvetica, sans-serif">
+                        <tr>
+                            <td>本邮件是Jenkins自动发送，请勿回复！</td>
+                        </tr>
+                        <tr>
+                            <td><h3>
+                                    <font color="#e53935">&nbsp&nbsp&nbsp&nbsp构建结果 - ${BUILD_STATUS}!</font>
+                                </h3></td>
+                        </tr>
+                        <tr>
+                            <td><br />
+                            <b><font color="#3f51b5">构建信息:</font></b>
+                            <hr size="2" width="100%" align="center" /></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <ul>
+                                    <li>项目名称：${PROJECT_NAME}</li>
+                                    <li>构建编号：第${BUILD_NUMBER}次构建</li>
+                                    <li>构建状态：${BUILD_STATUS}</li>
+                                    <li>触发原因：${CAUSE}</li>
+                                    <li>项目Url：
+                                        <a href="${PROJECT_URL}">${PROJECT_URL}</a></li>
+                                           <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+                                       </a>
+                                    </li>
+                                    <li>测试报告： <a href="${PROJECT_URL}HTML_20Report">${PROJECT_URL}HTML_20Report</a></li>
+                                    <li>所有用例： ${TEST_COUNTS,var="total"}</li>
+                                    <li>成功用例： ${TEST_COUNTS,var="pass"}</li>
+                                    <li>失败用例： ${TEST_COUNTS,var="fail"}</li>
+                                    <li>跳过用例： ${TEST_COUNTS,var="skip"}</li>
+                                    <li>构建日志：<a href="${BUILD_URL}console">${BUILD_URL}console</a></li>
+                                </ul>
+                            </td>
+                         <tr>
+                            <td><b><font color="#3f51b5">构建日志:</font></b>
+                            <hr size="2" width="100%" align="center" /></td>
+                        </tr>
+                        <tr>
+                            <td><textarea cols="160" rows="80" readonly="readonly"
+                                    style="font-family: Microsoft YaHei">${BUILD_LOG,maxLines=1000}</textarea>
+                            </td>
+                        </tr>
+                </html>''', subject: '${ENV, var="JOB_NAME"}-第${BUILD_NUMBER}次构建日志', to: '291320608@qq.com'
+            }
+        }
+```
+
+提交代码
+
+![image-20240417073008543](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170929656.png)
+
+查看邮箱
+
+![image-20240417075434221](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404170929530.png)
+
+## Jenkins日期修改
+
+发现Jenkins显示的日期不是本地时间
+
+![image-20240417093540860](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404171423159.png)
+
+找到脚本命令行
+
+![image-20240417093630807](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404171423515.png)
+
+输入
+
+```shell
+System.setProperty('org.apache.commons.jelly.tags.fmt.timeZone', 'Asia/Shanghai')
+```
+
+点击运行
+
+![image-20240417093735029](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404171423404.png)
+
+再次构建，时间就正确了
+
+![image-20240417093813332](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404171423635.png)
+
+邮件的接收时间也正确了
+
+![image-20240417093833667](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404171423551.png)
