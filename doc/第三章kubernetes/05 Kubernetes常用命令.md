@@ -248,9 +248,237 @@ kubectl scale --replicas=1  deployment my-nginx
 
 ![image-20240419195423696](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404192000238.png)
 
-service-api默认的负载均衡是轮询算法
+
 
 Kube-Proxy在K8s集群中所有Worker节点上都部署有一个，它掌握Service网络的所有信息，知道怎么和Service网络以及Pod网络互通互联。如果要将Kube-Proxy和节点网络打通(从而将某个服务通过Kube-Proxy暴露出去)，只需要让Kube-Proxy在节点上暴露一个监听端口即可。这种通过Kube-Proxy在节点上暴露一个监听端口，将K8s内部服务通过Kube-Proxy暴露出去的方式，术语就叫NodePort(顾名思义，端口暴露在节点上)。下图是通过NodePort暴露服务的简化概念模型。
 
 ![在这里插入图片描述](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404192000840.png)
+
+service-api默认的负载均衡是轮询算法,并且扩容的pod会自动加入到已存在pod所在的service（负载均衡网络）
+
+# 版本滚动升级
+
+*滚动更新允许通过使用新的实例逐步更新 Pod 实例从而实现 Deployments 更新，无需停机即可实现更新。*
+
+与应用程序扩展类似，如果暴露了 Deployment，服务（Service）将在更新期间仅对可用的 pod 进行负载均衡。可用 Pod 是应用程序用户可用的实例。
+
+这是我们之前的my-nginx，现在存在三个pod
+
+![image-20240420071439876](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201615175.png)
+
+通过创建一个新的pod，替换旧的pod
+
+![image-20240420071520826](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201615463.png)
+
+最终三个新的pod将原来旧的三个pod完全替换
+
+![image-20240420071241093](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201615681.png)
+
+Kubernetes中，滚动升级的默认设置是：
+
+- `maxUnavailable` 默认为25%：表示在滚动升级过程中，最多允许25%的Pod不可用。这意味着在更新过程中，Kubernetes将确保至少有75%的Pod保持可用状态，以确保应用程序的稳定性。
+- `maxSurge` 默认为25%：表示在滚动升级过程中，最多允许额外创建25%的Pod。这意味着在更新过程中，Kubernetes可以创建额外的25%的Pod来确保新版本的Pod能够顺利启动。
+
+也就是说每次最多创建25% 的pod替换旧的pod，如果存在升级问题，最多25%的pod不可用，其他pod还是可以正常提供服务。 
+
+## 升级
+
+```
+kubectl set image TYPE NAME CONTAINER_NAME=NEW_IMAGE_NAME
+```
+
+其中：
+
+- `TYPE` 是要更新的资源类型，可以是 Deployment、StatefulSet 或者 DaemonSet。
+- `NAME` 是要更新的资源的名称。
+- `CONTAINER_NAME` 是要更新的容器名称。
+- `NEW_IMAGE_NAME` 是要更新的新镜像名称（包括版本标签）。
+
+### 升级正常
+
+将名为 `my-nginx` 的 `Deployment` 中的 `nginx` 容器的镜像更新为 `nginx:1.9.1` 版本。
+
+```shell
+kubectl set image deployment my-nginx nginx=nginx:1.9.1
+```
+
+CONTAINER_NAME之前工作节点所有的容器设置的就是nginx
+
+![image-20240420074526426](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616470.png)
+
+1）执行升级，可以看到此时一个新的pod（my-nginx-697c5bb596-jnkdb）正在创建
+
+![image-20240420074729984](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616247.png)
+
+2）my-nginx-697c5bb596-jnkdb创建成功后，停掉一个旧的pod（my-nginx-6b74b79f57-rpn2w），又有一个新的pod（my-nginx-697c5bb596-5n8k8）正在创建
+
+![image-20240420074918989](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616719.png)
+
+3）my-nginx-697c5bb596-5n8k8创建成功后，停掉一个旧的pod（my-nginx-6b74b79f57-smfpm），一个新的pod（my-nginx-697c5bb596-c2vg5）正在创建
+
+![image-20240420075056317](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616426.png)
+
+4）my-nginx-697c5bb596-c2vg5创建成功后，停掉一个旧的pod（my-nginx-6b74b79f57-sns26）。
+
+最终创建了3个新的pod，原来的3个pod被停掉删除
+
+![image-20240420074755490](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616302.png)
+
+5）可以看到部署的镜像已经升级为nginx:1.9.1
+
+![image-20240420075835684](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616115.png)
+
+### 升级错误
+
+升级至一个不存在的版本，看看是什么情况
+
+```shell
+kubectl set image deployment my-nginx nginx=nginx:abc
+```
+
+
+
+![image-20240420080221808](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616867.png)
+
+在创建第一个pod时，`ImagePullBackOff`状态表示Kubernetes无法从指定的镜像仓库拉取镜像，出现升级错误时，Kubernetes就会保持现在的状态，25%的pod升级出现问题，75%的pod能够保持可用状态
+
+## 回滚
+
+现在升级出现问题，想要回滚到之前可用的版本
+
+### 查看历史记录
+
+```
+kubectl rollout history deployment my-nginx
+```
+
+![image-20240420081051418](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616601.png)
+
+查看到有三个版本历史，但是原因并没有记录为none。
+
+`CHANGE-CAUSE` 字段的值通常是一个简短的描述，用于说明导致特定操作的原因。例如，如果是由于执行了某个kubectl命令而引起的资源更新，那么`CHANGE-CAUSE`字段可能会显示该命令的描述，以便用户了解是谁进行了这个操作。
+
+这是因为在升级时没有--record去记录事件原因
+
+```
+kubectl set image deployment my-nginx nginx=nginx:11111 --record
+```
+
+![image-20240420081832709](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616289.png)
+
+### 回滚到指定版本
+
+回滚到最初的版本 version=1
+
+```shell
+kubectl rollout undo deployment my-nginx --to-revision=1
+```
+
+![image-20240420082145271](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616268.png)
+
+可以看到nginx镜像从1.9.1回滚到latest
+
+![image-20240420082132012](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616945.png)
+
+不指定--to-revision=1表示回滚到上个版本
+
+```shell
+kubectl rollout undo deployment my-nginx
+```
+
+# 配置文件方式实现
+
+先删除之前创建的deployment和service
+
+![image-20240420082953527](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616178.png)
+
+## 部署一个应用
+
+部署一个名为nginx-deployment的应用
+
+deployment.yaml：
+
+```yaml
+apiVersion: apps/v1	#与k8s集群版本有关，使用 kubectl api-versions 即可查看当前集群支持的版本
+kind: Deployment	#该配置的类型，我们使用的是 Deployment
+metadata:	        #译名为元数据，即 Deployment 的一些基本属性和信息
+  name: nginx-deployment	#Deployment 的名称
+  labels:	    #标签，可以灵活定位一个或多个资源，其中key和value均可自定义，可以定义多组，目前不需要理解
+    app: nginx	#为该Deployment设置key为app，value为nginx的标签
+spec:	        #这是关于该Deployment的描述，可以理解为你期待该Deployment在k8s中如何使用
+  replicas: 1	#使用该Deployment创建一个应用程序实例
+  selector:	    #标签选择器，与上面的标签共同作用，目前不需要理解
+    matchLabels: #选择包含标签app:nginx的资源
+      app: nginx
+  template:	    #这是选择或创建的Pod的模板
+    metadata:	#Pod的元数据
+      labels:	#Pod的标签，上面的selector即选择包含标签app:nginx的Pod
+        app: nginx
+    spec:	    #期望Pod实现的功能（即在pod中部署）
+      containers:	#生成container，与docker中的container是同一种
+      - name: nginx	#container的名称
+        image: nginx:1.7.9	#使用镜像nginx:1.7.9创建container，该container默认80端口可访问
+```
+
+执行deployment.yaml文件
+
+```
+kubectl apply -f deployment.yaml
+```
+
+![image-20240420083627754](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616702.png)
+
+## 暴露应用
+
+expose.yaml:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service	#Service 的名称
+  labels:     	#Service 自己的标签
+    app: nginx	#为该 Service 设置 key 为 app，value 为 nginx 的标签
+spec:	    #这是关于该 Service 的定义，描述了 Service 如何选择 Pod，如何被访问
+  selector:	    #标签选择器
+    app: nginx	#选择包含标签 app:nginx 的 Pod
+  ports:
+  - name: nginx-port	#端口的名字
+    protocol: TCP	    #协议类型 TCP/UDP
+    port: 80	        #集群内的其他容器组可通过 80 端口访问 Service
+    nodePort: 32600   #通过任意节点的 32600 端口访问 Service
+    targetPort: 80	#将请求转发到匹配 Pod 的 80 端口
+  type: NodePort	#Serive的类型，ClusterIP/NodePort/LoaderBalancer
+```
+
+![image-20240420084437615](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616020.png)
+
+![image-20240420084500547](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616410.png)
+
+## 扩缩容
+
+只需要修改deployment.yaml 中的 replicas 属性即可实现扩缩容
+
+如将replicas 设置为3
+
+![image-20240420084641519](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616469.png)
+
+## 滚动升级
+
+修改deployment.yaml 中的 imageName 属性等
+
+如将image设置为nginx:1.9.1
+
+![image-20240420084903366](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616305.png)
+
+## 删除deployment、service
+
+直接删除由 `yaml` 文件定义的 Kubernetes 资源。（文件并没有删除）
+
+```
+kubectl delete -f deployment.yaml
+kubectl delete -f expose.yaml 
+```
+
+![image-20240420085109829](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616428.png)
 
