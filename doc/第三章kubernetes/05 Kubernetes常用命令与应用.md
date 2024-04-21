@@ -455,6 +455,12 @@ spec:	    #这是关于该 Service 的定义，描述了 Service 如何选择 Po
 
 ![image-20240420084500547](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404201616410.png)
 
+```shell
+kubectl apply -f expose.yaml
+```
+
+
+
 ## 扩缩容
 
 只需要修改deployment.yaml 中的 replicas 属性即可实现扩缩容
