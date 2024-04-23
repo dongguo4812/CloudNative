@@ -970,3 +970,53 @@ kubectl get pods --field-selector metadata.name=my-nginx
 ```
 
 ![image-20240421141705312](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404212107442.png)
+
+# 认识kubectl和kubelet
+
+![image-20240422093727639](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404231148255.png)
+
+使用 `kubeadm` 安装的 Kubernetes 集群的相关配置文件都存储在 `/etc/kubernetes` 目录下。以下是其中一些重要文件的简要概述：
+
+1. **admin.conf**：用于管理访问集群的配置文件。通常包括 kubectl 与集群通信所需的凭据和集群信息。
+2. **controller-manager.conf**：Kubernetes 控制器管理器的配置文件，它管理着控制集群状态的各种控制器。
+3. **kubelet.conf**：kubelet 的配置文件，kubelet 负责管理节点上的 pod 和容器。
+4. **scheduler.conf**：Kubernetes 调度器的配置文件，负责将 pod 调度到集群中的节点上。
+
+`manifests` 目录通常用于存放各种资源对象的 YAML 文件，这些对象描述了 Kubernetes 集群中要创建的工作负载、服务、配置等内容。
+
+当 Kubernetes 集群启动时，它会检测 `manifests` 目录中的 YAML 文件，并尝试将这些文件中描述的对象部署到集群中。这些对象的创建由 Kubernetes 控制器负责管理，并根据文件中定义的规范确保集群中的状态与文件中描述的状态一致。
+
+![image-20240422094828441](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404231148026.png)
+
+后期使用二进制方式安装Kubernetes集群时，就会执行kubectl install etcd.yaml等操作来将这些对象部署到集群中。
+
+kubelet额外参数配置 /etc/sysconfig/kubelet；
+
+kubelet配置位置 /var/lib/kubelet/config.yam
+
+
+
+kubectl的所有命令参考：https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands
+
+# kubelet命令自动补全
+
+使用 Bash shell 的自动补全功能，安装 bash-completion 软件包
+
+```shell
+yum install bash-completion
+```
+
+![image-20240422101051427](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404231148281.png)
+
+启动 Kubernetes 自动补全功能
+
+```shell
+#这个命令会将 kubectl completion bash 的输出附加到 ~/.bashrc 文件的末尾。这样，每次你打开一个新的终端窗口时，Bash 都会自动加载 kubectl 的自动补全。
+echo 'source <(kubectl completion bash)' >>~/.bashrc
+#这个命令将 kubectl completion bash 的输出重定向到 /etc/bash_completion.d/kubectl 文件中。这样可以确保在每个用户的 Bash 自动补全目录中都存在 kubectl 的自动补全。
+kubectl completion bash >/etc/bash_completion.d/kubectl
+#这个命令用于重新加载 Bash 的自动补全脚本，以便使新添加的 kubectl 自动补全生效。
+source /usr/share/bash-completion/bash_completion
+```
+
+![image-20240422102002494](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404231148052.png)
