@@ -596,6 +596,8 @@ spec:
 TCP 套接字（TCP Socket）：通过尝试建立到容器内指定端口的 TCP 连接来检查应用程序的状态。如果连接成功建立，探针被认为是成功的；否则，探针被认为是失败的。
 你还可以调整探针的配置参数，例如 `initialDelaySeconds`（初始延迟时间）、`periodSeconds`（检查周期）、`failureThreshold`（失败阈值）等。
 
+在下一章会详细介绍
+
 ```shell
 apiVersion: v1
 kind: Pod
