@@ -747,7 +747,8 @@ spec:
         - name: common-html
           mountPath: /app
       startupProbe:
-          exec: [ "/bin/sh", "-c", "cat /app/a.txt" ]
+          exec: 
+              command: [ "/bin/sh", "-c", "cat /app/a.txt" ]
           periodSeconds: 5
           timeoutSeconds: 5
           successThreshold: 1
@@ -810,10 +811,6 @@ spec:
 
 ### 就绪探针Readiness Probe
 
-
-
-
-
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -843,7 +840,7 @@ spec:
 
 ![image-20240424205318058](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404242150288.png)
 
-启动探针执行失败
+/usr/share/nginx/html没有/111.html，就绪探针执行失败
 
 ![image-20240424214642890](https://gitee.com/dongguo4812_admin/image/raw/master/image/202404242150266.png)
 
